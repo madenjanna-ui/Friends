@@ -7,73 +7,62 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main id="app">
-    <canvas id="space"></canvas>
+<main id="app">
+  <canvas id="space"></canvas>
 
-    <section id="intro" class="scene active">
-      <div class="space-title">
-        <div class="small">Иногда две жизни</div>
-        <h1>встречаются<br><span>не случайно</span></h1>
-        <div class="hint">Смотрите внимательно…</div>
-      </div>
-    </section>
+  <section id="intro" class="scene active">
+    <div class="space-title">
+      <div class="small">Иногда две жизни</div>
+      <h1>встречаются<br><span>не случайно</span></h1>
+      <div class="hint">Нажмите, чтобы начать историю</div>
+      <button id="startBtn" class="start-btn">✨ Начать</button>
+    </div>
+  </section>
 
-    <section id="collision" class="scene">
-      <div class="collision-text">Две кометы.<br>Два пути.</div>
-    </section>
+  <section id="collision" class="scene">
+    <div class="collision-text">Две кометы.<br>Два пути.<br><span>Одна встреча.</span></div>
+  </section>
 
-    <section id="photoScene" class="scene">
-      <div class="photo-wrap">
-        <img src="assets/photo1.jpg" alt="Наши друзья">
-        <div class="photo-caption">
-          <span>И одна прекрасная встреча ❤️</span>
-        </div>
-      </div>
-    </section>
+  <section id="photoScene" class="scene">
+    <div class="photo-wrap">
+      <img src="assets/photo1.jpg" alt="Наши друзья">
+      <div class="photo-caption"><span>И одна прекрасная встреча ❤️</span></div>
+    </div>
+  </section>
 
-    <section id="story" class="scene">
-      <div class="story-card">
-        <div class="eyebrow">Годы идут…</div>
-        <h2>А настоящие чувства<br>становятся только крепче.</h2>
-        <p>
-          Есть люди, с которыми можно смеяться до слёз,
-          молчать без неловкости и просто быть собой.
-        </p>
-        <p class="accent">Вы именно такие.</p>
-      </div>
-    </section>
+  <section id="story" class="scene">
+    <div class="story-card">
+      <div class="eyebrow">Годы идут…</div>
+      <h2>А настоящие чувства<br>становятся только крепче.</h2>
+      <p>Есть люди, с которыми можно смеяться до слёз, молчать без неловкости и просто быть собой.</p>
+      <p class="accent">Вы именно такие.</p>
+    </div>
+  </section>
 
-    <section id="photo2Scene" class="scene">
-      <div class="photo-wrap second">
-        <img src="assets/photo2.jpg" alt="Вместе с друзьями">
-        <div class="photo-caption">
-          <span>Потому что дружба — это тоже семья.</span>
-        </div>
-      </div>
-    </section>
+  <section id="photo2Scene" class="scene">
+    <div class="photo-wrap second">
+      <img src="assets/photo2.jpg" alt="Вместе с друзьями">
+      <div class="photo-caption"><span>Потому что дружба — это тоже семья. ❤️</span></div>
+    </div>
+  </section>
 
-    <section id="final" class="scene">
-      <div class="final-card">
-        <div class="ring">💍</div>
-        <div class="eyebrow">С годовщиной свадьбы!</div>
-        <h1>Нашим настоящим<br><span>друзьям</span></h1>
-        <p>
-          Пусть ваш общий путь будет долгим,
-          счастливым и наполненным тем самым
-          теплом, которое чувствуют все рядом с вами.
-        </p>
-        <p class="love">Любите друг друга.<br>Смейтесь. Мечтайте. Живите. ❤️</p>
+  <section id="final" class="scene">
+    <div class="final-card">
+      <div class="ring">💍</div>
+      <div class="eyebrow">С годовщиной свадьбы!</div>
+      <h1>Нашим настоящим<br><span>друзьям</span></h1>
+      <p>Пусть ваш общий путь будет долгим, счастливым и наполненным тем самым теплом, которое чувствуют все рядом с вами.</p>
+      <p class="love">Любите друг друга.<br>Смейтесь. Мечтайте. Цените.<br>И с кайфом живите! ❤️</p>
+      <button id="musicBtn" class="music-btn">▶ Ваша песня</button>
+      <audio id="song" preload="auto">
+        <source src="assets/song.mp3" type="audio/mpeg">
+      </audio>
+    </div>
+  </section>
 
-        <button id="musicBtn" class="music-btn">▶ Включить нашу песню</button>
-        <audio id="song" preload="auto">
-          <!-- Сюда позже положим вашу песню: assets/song.mp3 -->
-          <source src="assets/song.mp3" type="audio/mpeg">
-        </audio>
-      </div>
-    </section>
-
-    <button id="skip" aria-label="Пропустить">Пропустить →</button>
-  </main>
-  <script src="script.js"></script>
+  <div id="progress"><i></i></div>
+  <button id="skip">Пропустить →</button>
+</main>
+<script src="script.js"></script>
 </body>
 </html>
