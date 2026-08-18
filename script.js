@@ -1,158 +1,662 @@
-const canvas=document.getElementById("space"),ctx=canvas.getContext("2d");
-const scenes=[...document.querySelectorAll(".scene")];
-const startBtn=document.getElementById("startBtn"),skip=document.getElementById("skip");
-const progress=document.querySelector("#progress i"),musicBtn=document.getElementById("musicBtn");
-const song=document.getElementById("song");
+const canvas = document.getElementById("space");
+const ctx = canvas.getContext("2d");
 
-let W,H,dpr,stars=[],comets=[],phase=0,current=0,started=false,startAt=0;
-let audioCtx=null,master=null,melodyGain=null,melodyTimer=null;
+const scenes = document.querySelectorAll(".scene");
+const startBtn = document.getElementById("startBtn");
+const skipBtn = document.getElementById("skip");
+const musicBtn = document.getElementById("musicBtn");
+const song = document.getElementById("song");
+const progress = document.querySelector("#progress i");
 
-function resize(){
- dpr=Math.min(devicePixelRatio||1,2); W=innerWidth; H=innerHeight;
- canvas.width=W*dpr; canvas.height=H*dpr; canvas.style.width=W+"px"; canvas.style.height=H+"px";
- ctx.setTransform(dpr,0,0,dpr,0,0);
- stars=Array.from({length:Math.min(190,Math.floor(W*H/6200))},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.4+.2,a:Math.random()*.8+.15}));
- makeComets();
-}
-function makeComets(){comets=[{x:-150,y:H*.32,vx:3.1,vy:.7},{x:W+150,y:H*.68,vx:-3.1,vy:-.7}]}
-function drawStars(t){
- ctx.fillStyle="#02030a";ctx.fillRect(0,0,W,H);
- for(const s of stars){ctx.globalAlpha=s.a*(.55+.45*Math.sin(t*.001+s.x));ctx.fillStyle="#fff";ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill()}
- ctx.globalAlpha=1;
-}
-function comet(c){
- const a=Math.atan2(c.vy,c.vx);ctx.save();ctx.translate(c.x,c.y);ctx.rotate(a);
- const g=ctx.createLinearGradient(-200,0,25,0);g.addColorStop(0,"rgba(255,150,50,0)");g.addColorStop(.72,"rgba(255,210,110,.35)");g.addColorStop(1,"rgba(255,245,220,.95)");
- ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(-200,0);ctx.quadraticCurveTo(-65,-21,8,-6);ctx.quadraticCurveTo(-65,21,-200,0);ctx.fill();
- const glow=ctx.createRadialGradient(0,0,0,0,0,28);glow.addColorStop(0,"#fff");glow.addColorStop(.22,"#ffe5a0");glow.addColorStop(.65,"#ff9e3d");glow.addColorStop(1,"rgba(255,80,20,0)");
- ctx.fillStyle=glow;ctx.beginPath();ctx.arc(0,0,28,0,Math.PI*2);ctx.fill();ctx.restore();
-}
-function animate(t){
- drawStars(t);
- if(started&&phase===0){for(const c of comets){c.x+=c.vx;c.y+=c.vy;comet(c)}}
- requestAnimationFrame(animate);
-}
-resize();addEventListener("resize",resize);requestAnimationFrame(animate);
+let W, H;
+let stars = [];
+let comets = [];
 
-function show(i){
- current=i; scenes.forEach((s,n)=>s.classList.toggle("active",n===i));
- if(i===5) fadeMelody();
-}
-function flash(){
- const f=document.createElement("div");f.className="flash";document.body.appendChild(f);
- requestAnimationFrame(()=>f.classList.add("go"));setTimeout(()=>f.remove(),1000);
+let currentScene = 0;
+let started = false;
+let startTime = 0;
+let timers = [];
+
+let audioCtx = null;
+let master = null;
+let melodyGain = null;
+let melodyTimer = null;
+
+
+/* =========================
+   КОСМОС
+========================= */
+
+function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+
+    canvas.width = W;
+    canvas.height = H;
+
+    stars = [];
+
+    for (let i = 0; i < 180; i++) {
+        stars.push({
+            x: Math.random() * W,
+            y: Math.random() * H,
+            r: Math.random() * 1.4 + 0.2,
+            a: Math.random() * 0.8 + 0.2
+        });
+    }
+
+    createComets();
 }
 
-/*
-  Сценарий синхронизирован с песней:
-  0:00–0:16 интро / кометы начинают движение
-  0:16–0:34 сближение / столкновение
-  0:34–1:18 первое фото
-  1:18–2:05 история
-  2:05–3:08 второе фото
-  3:08–3:52 поздравление
-  3:52–конец финальный экран
-*/
-const timeline=[
- [0,0],
- [16000,1],
- [34000,2],
- [78000,3],
- [125000,4],
- [188000,5]
+
+function createComets() {
+
+    comets = [
+        {
+            x: -180,
+            y: H * 0.32,
+            vx: 3.1,
+            vy: 0.7
+        },
+        {
+            x: W + 180,
+            y: H * 0.68,
+            vx: -3.1,
+            vy: -0.7
+        }
+    ];
+}
+
+
+function drawStars(time) {
+
+    ctx.fillStyle = "#02030a";
+    ctx.fillRect(0, 0, W, H);
+
+    stars.forEach(star => {
+
+        const twinkle =
+            0.55 +
+            Math.sin(time * 0.001 + star.x) * 0.45;
+
+        ctx.globalAlpha = star.a * twinkle;
+
+        ctx.fillStyle = "#ffffff";
+
+        ctx.beginPath();
+        ctx.arc(
+            star.x,
+            star.y,
+            star.r,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+    });
+
+    ctx.globalAlpha = 1;
+}
+
+
+function drawComet(c) {
+
+    const angle = Math.atan2(c.vy, c.vx);
+
+    ctx.save();
+
+    ctx.translate(c.x, c.y);
+    ctx.rotate(angle);
+
+    const tail =
+        ctx.createLinearGradient(
+            -200,
+            0,
+            30,
+            0
+        );
+
+    tail.addColorStop(
+        0,
+        "rgba(255,120,20,0)"
+    );
+
+    tail.addColorStop(
+        0.7,
+        "rgba(255,200,100,.35)"
+    );
+
+    tail.addColorStop(
+        1,
+        "rgba(255,245,220,.95)"
+    );
+
+    ctx.fillStyle = tail;
+
+    ctx.beginPath();
+
+    ctx.moveTo(-200, 0);
+
+    ctx.quadraticCurveTo(
+        -70,
+        -22,
+        10,
+        -6
+    );
+
+    ctx.quadraticCurveTo(
+        -70,
+        22,
+        -200,
+        0
+    );
+
+    ctx.fill();
+
+
+    const glow =
+        ctx.createRadialGradient(
+            0,
+            0,
+            0,
+            0,
+            0,
+            30
+        );
+
+    glow.addColorStop(0, "#ffffff");
+    glow.addColorStop(0.2, "#ffe5a0");
+    glow.addColorStop(0.65, "#ff9e3d");
+    glow.addColorStop(
+        1,
+        "rgba(255,70,10,0)"
+    );
+
+    ctx.fillStyle = glow;
+
+    ctx.beginPath();
+
+    ctx.arc(
+        0,
+        0,
+        30,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+    ctx.restore();
+}
+
+
+function animation(time) {
+
+    drawStars(time);
+
+    if (started && currentScene <= 1) {
+
+        comets.forEach(comet => {
+
+            comet.x += comet.vx;
+            comet.y += comet.vy;
+
+            drawComet(comet);
+
+        });
+
+    }
+
+    requestAnimationFrame(animation);
+}
+
+
+/* =========================
+   СЦЕНЫ
+========================= */
+
+function showScene(number) {
+
+    currentScene = number;
+
+    scenes.forEach((scene, index) => {
+
+        if (index === number) {
+            scene.classList.add("active");
+        } else {
+            scene.classList.remove("active");
+        }
+
+    });
+
+    if (number === 5) {
+        fadeBackgroundMusic();
+    }
+}
+
+
+/* =========================
+   ВСПЫШКА
+========================= */
+
+function explosionFlash() {
+
+    const flash = document.createElement("div");
+
+    flash.className = "flash";
+
+    document.body.appendChild(flash);
+
+    requestAnimationFrame(() => {
+
+        flash.classList.add("go");
+
+    });
+
+    setTimeout(() => {
+
+        flash.remove();
+
+    }, 1000);
+}
+
+
+/* =========================
+   СЦЕНАРИЙ
+========================= */
+
+const timeline = [
+
+    {
+        time: 0,
+        scene: 0
+    },
+
+    {
+        time: 16000,
+        scene: 1
+    },
+
+    {
+        time: 34000,
+        scene: 2
+    },
+
+    {
+        time: 78000,
+        scene: 3
+    },
+
+    {
+        time: 125000,
+        scene: 4
+    },
+
+    {
+        time: 188000,
+        scene: 5
+    }
+
 ];
-let timers=[];
-function runTimeline(){
- timers.forEach(clearTimeout);timers=[];
- timeline.forEach(([ms,index])=>{
-   timers.push(setTimeout(()=>{
-     if(index===1){phase=1;flash();show(1);setTimeout(()=>{phase=0;makeComets()},1000)}
-     else show(index);
-   },ms));
- });
- const tick=setInterval(()=>{
-   if(!started||current===5){clearInterval(tick);return}
-   const elapsed=performance.now()-startAt;
-   progress.style.width=Math.min(100,elapsed/188000*100)+"%";
- },100);
- timers.push(tick);
+
+
+function startTimeline() {
+
+    timers.forEach(timer => clearTimeout(timer));
+
+    timers = [];
+
+
+    timeline.forEach(item => {
+
+        const timer = setTimeout(() => {
+
+            if (item.scene === 1) {
+
+                explosionFlash();
+
+                showScene(1);
+
+                setTimeout(() => {
+
+                    createComets();
+
+                }, 1000);
+
+            } else {
+
+                showScene(item.scene);
+
+            }
+
+        }, item.time);
+
+
+        timers.push(timer);
+
+    });
+
+
+    const progressTimer = setInterval(() => {
+
+        if (!started || currentScene === 5) {
+
+            clearInterval(progressTimer);
+
+            return;
+        }
+
+        const elapsed =
+            performance.now() - startTime;
+
+        const percent =
+            Math.min(
+                100,
+                elapsed / 188000 * 100
+            );
+
+        progress.style.width =
+            percent + "%";
+
+    }, 100);
+
 }
 
-async function startExperience(e){
- if(e) e.preventDefault();
- if(started)return;
- started=true; startAt=performance.now();
- initAudio();
- try{
-   if(audioCtx.state === "suspended") await audioCtx.resume();
- }catch(_){}
- startMelody();
- try{
-   await song.play();
-   musicBtn.textContent="❚❚ Пауза";
- }catch(e){
-   musicBtn.textContent="▶ Включить вашу песню";
- }
- runTimeline();
-}
-startBtn.addEventListener("click",startExperience);
-startBtn.addEventListener("touchend",startExperience,{passive:false});
 
-function skipExperience(e){
- if(e) e.preventDefault();
- timers.forEach(clearTimeout);
- phase=0;
- show(5);
-}
-skip.addEventListener("click",skipExperience);
-skip.addEventListener("touchend",skipExperience,{passive:false});
+/* =========================
+   АУДИО
+========================= */
 
-function initAudio(){
- if(audioCtx)return;
- audioCtx=new (window.AudioContext||window.webkitAudioContext)();
- master=audioCtx.createGain();master.gain.value=.10;master.connect(audioCtx.destination);
- melodyGain=audioCtx.createGain();melodyGain.gain.value=.0001;melodyGain.connect(master);
+function initAudio() {
+
+    if (audioCtx) return;
+
+    const AudioContext =
+        window.AudioContext ||
+        window.webkitAudioContext;
+
+    if (!AudioContext) return;
+
+    audioCtx = new AudioContext();
+
+    master =
+        audioCtx.createGain();
+
+    master.gain.value = 0.1;
+
+    master.connect(
+        audioCtx.destination
+    );
+
+
+    melodyGain =
+        audioCtx.createGain();
+
+    melodyGain.gain.value = 0.001;
+
+    melodyGain.connect(master);
 }
-function note(freq,time,dur,type="triangle",vol=.05){
- const o=audioCtx.createOscillator(),g=audioCtx.createGain();
- o.type=type;o.frequency.setValueAtTime(freq,time);
- g.gain.setValueAtTime(.0001,time);g.gain.exponentialRampToValueAtTime(vol,time+.025);g.gain.exponentialRampToValueAtTime(.0001,time+dur);
- o.connect(g);g.connect(melodyGain);o.start(time);o.stop(time+dur+.03);
+
+
+function playNote(
+    frequency,
+    time,
+    duration,
+    volume
+) {
+
+    if (!audioCtx) return;
+
+    const oscillator =
+        audioCtx.createOscillator();
+
+    const gain =
+        audioCtx.createGain();
+
+    oscillator.type = "triangle";
+
+    oscillator.frequency.value =
+        frequency;
+
+    gain.gain.setValueAtTime(
+        0.001,
+        time
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        volume,
+        time + 0.03
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        time + duration
+    );
+
+    oscillator.connect(gain);
+
+    gain.connect(melodyGain);
+
+    oscillator.start(time);
+
+    oscillator.stop(
+        time + duration + 0.05
+    );
 }
-function startMelody(){
- if(!audioCtx)return;
- const beat=60/126, pattern=[261.63,329.63,392,329.63,293.66,349.23,440,349.23];
- let t=audioCtx.currentTime+.08;
- pattern.forEach((f,i)=>note(f,t+i*beat/2,beat*.42,"triangle",.025));
- note(130.81,t,beat*.75,"sine",.03);
- melodyTimer=setInterval(()=>{
-   if(current>=5){clearInterval(melodyTimer);return}
-   const now=audioCtx.currentTime+.05;
-   pattern.forEach((f,i)=>note(f,now+i*beat/2,beat*.42,"triangle",.025));
-   note(130.81,now,beat*.75,"sine",.03);
- },beat*4);
+
+
+function startBackgroundMusic() {
+
+    if (!audioCtx) return;
+
+    const beat = 60 / 126;
+
+    const melody = [
+        261.63,
+        329.63,
+        392.00,
+        329.63,
+        293.66,
+        349.23,
+        440.00,
+        349.23
+    ];
+
+
+    function playPhrase() {
+
+        if (!started) return;
+
+        const now =
+            audioCtx.currentTime + 0.05;
+
+        melody.forEach(
+            (frequency, index) => {
+
+                playNote(
+                    frequency,
+                    now + index * beat / 2,
+                    beat * 0.4,
+                    0.025
+                );
+
+            }
+        );
+
+    }
+
+
+    playPhrase();
+
+    melodyTimer =
+        setInterval(
+            playPhrase,
+            beat * 4 * 1000
+        );
 }
-function fadeMelody(){
- if(!melodyGain||!audioCtx)return;
- melodyGain.gain.cancelScheduledValues(audioCtx.currentTime);
- melodyGain.gain.setTargetAtTime(.0001,audioCtx.currentTime,.55);
+
+
+function fadeBackgroundMusic() {
+
+    if (!melodyGain || !audioCtx)
+        return;
+
+    melodyGain.gain.cancelScheduledValues(
+        audioCtx.currentTime
+    );
+
+    melodyGain.gain.setTargetAtTime(
+        0.001,
+        audioCtx.currentTime,
+        0.5
+    );
 }
-async function toggleMusic(e){
- if(e) e.preventDefault();
- try{
-   if(audioCtx && audioCtx.state === "suspended") await audioCtx.resume();
-   if(song.paused){
-     await song.play();
-     musicBtn.textContent="❚❚ Пауза";
-     fadeMelody();
-   }else{
-     song.pause();
-     musicBtn.textContent="▶ Продолжить песню";
-   }
- }catch(e){
-   musicBtn.textContent="▶ Нажмите ещё раз";
- }
-}
-musicBtn.addEventListener("click",toggleMusic);
-musicBtn.addEventListener("touchend",toggleMusic,{passive:false});
-song.addEventListener("ended",()=>musicBtn.textContent="▶ Послушать ещё раз");
+
+
+/* =========================
+   ГЛАВНАЯ КНОПКА
+========================= */
+
+startBtn.onclick = async function () {
+
+    if (started) return;
+
+    started = true;
+
+    startTime =
+        performance.now();
+
+
+    initAudio();
+
+
+    if (
+        audioCtx &&
+        audioCtx.state === "suspended"
+    ) {
+
+        await audioCtx.resume();
+
+    }
+
+
+    startBackgroundMusic();
+
+
+    /*
+       Пытаемся сразу запустить песню.
+       Это разрешено iPhone,
+       потому что функция вызвана
+       непосредственно нажатием.
+    */
+
+    try {
+
+        await song.play();
+
+        musicBtn.textContent =
+            "❚❚ Пауза";
+
+    }
+
+    catch (error) {
+
+        console.log(
+            "Автозапуск песни:",
+            error
+        );
+
+    }
+
+
+    startTimeline();
+
+};
+
+
+/* =========================
+   ПРОПУСТИТЬ
+========================= */
+
+skipBtn.onclick = function () {
+
+    timers.forEach(
+        timer => clearTimeout(timer)
+    );
+
+    currentScene = 5;
+
+    showScene(5);
+
+};
+
+
+/* =========================
+   КНОПКА ПЕСНИ
+========================= */
+
+musicBtn.onclick = async function () {
+
+    try {
+
+        if (
+            audioCtx &&
+            audioCtx.state === "suspended"
+        ) {
+
+            await audioCtx.resume();
+
+        }
+
+
+        if (song.paused) {
+
+            await song.play();
+
+            musicBtn.textContent =
+                "❚❚ Пауза";
+
+        }
+
+        else {
+
+            song.pause();
+
+            musicBtn.textContent =
+                "▶ Продолжить";
+
+        }
+
+    }
+
+    catch (error) {
+
+        console.log(error);
+
+    }
+
+};
+
+
+song.onended = function () {
+
+    musicBtn.textContent =
+        "▶ Послушать ещё раз";
+
+};
+
+
+/* =========================
+   ЗАПУСК
+========================= */
+
+resize();
+
+window.addEventListener(
+    "resize",
+    resize
+);
+
+requestAnimationFrame(
+    animation
+);
