@@ -4,7 +4,7 @@ body{touch-action:manipulation}
 #app{position:relative;width:100%;height:100%;overflow:hidden;background:radial-gradient(circle at center,#101633 0,#03040b 48%,#000 100%)}
 #space{position:absolute;inset:0;width:100%;height:100%;z-index:0}
 .scene{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity 1.7s ease}
-.scene.active{opacity:1}
+.scene.active{opacity:1;pointer-events:auto}
 .space-title{text-align:center;padding:24px;animation:float 5s ease-in-out infinite}
 .small,.eyebrow{font-family:Arial,sans-serif;text-transform:uppercase;letter-spacing:.25em;font-size:12px;opacity:.65}
 .space-title h1{font-size:clamp(42px,11vw,90px);line-height:.95;font-weight:400;margin:22px 0}
@@ -38,3 +38,6 @@ h1 span,.accent,.love{color:#ffd98a}
   .story-card,.final-card{padding:30px 20px}
   .story-card h2{font-size:30px}
 }
+
+button, audio { position: relative; z-index: 20; pointer-events: auto !important; }
+.start-btn, .music-btn, #skip { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }

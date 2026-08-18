@@ -78,10 +78,15 @@ function runTimeline(){
  timers.push(tick);
 }
 
-startBtn.addEventListener("click",async()=>{
+async function startExperience(e){
+ if(e) e.preventDefault();
  if(started)return;
  started=true; startAt=performance.now();
- initAudio(); startMelody();
+ initAudio();
+ try{
+   if(audioCtx.state === "suspended") await audioCtx.resume();
+ }catch(_){}
+ startMelody();
  try{
    await song.play();
    musicBtn.textContent="❚❚ Пауза";
@@ -89,8 +94,18 @@ startBtn.addEventListener("click",async()=>{
    musicBtn.textContent="▶ Включить вашу песню";
  }
  runTimeline();
-});
-skip.addEventListener("click",()=>{timers.forEach(clearTimeout);phase=0;show(5)});
+}
+startBtn.addEventListener("click",startExperience);
+startBtn.addEventListener("touchend",startExperience,{passive:false});
+
+function skipExperience(e){
+ if(e) e.preventDefault();
+ timers.forEach(clearTimeout);
+ phase=0;
+ show(5);
+}
+skip.addEventListener("click",skipExperience);
+skip.addEventListener("touchend",skipExperience,{passive:false});
 
 function initAudio(){
  if(audioCtx)return;
@@ -122,10 +137,22 @@ function fadeMelody(){
  melodyGain.gain.cancelScheduledValues(audioCtx.currentTime);
  melodyGain.gain.setTargetAtTime(.0001,audioCtx.currentTime,.55);
 }
-musicBtn.addEventListener("click",async()=>{
+async function toggleMusic(e){
+ if(e) e.preventDefault();
  try{
-   if(song.paused){await song.play();musicBtn.textContent="❚❚ Пауза";fadeMelody()}
-   else{song.pause();musicBtn.textContent="▶ Продолжить песню"}
- }catch(e){musicBtn.textContent="▶ Включить вашу песню"}
-});
+   if(audioCtx && audioCtx.state === "suspended") await audioCtx.resume();
+   if(song.paused){
+     await song.play();
+     musicBtn.textContent="❚❚ Пауза";
+     fadeMelody();
+   }else{
+     song.pause();
+     musicBtn.textContent="▶ Продолжить песню";
+   }
+ }catch(e){
+   musicBtn.textContent="▶ Нажмите ещё раз";
+ }
+}
+musicBtn.addEventListener("click",toggleMusic);
+musicBtn.addEventListener("touchend",toggleMusic,{passive:false});
 song.addEventListener("ended",()=>musicBtn.textContent="▶ Послушать ещё раз");
